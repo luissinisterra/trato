@@ -2,63 +2,86 @@ package com.trato.auctions_service.model;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "auctions")
 public class Auction {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "product_id", nullable = false)
     private Long productId;
 
-    @Column(nullable = false)
+    @Column(name = "seller_id", nullable = false)
     private Long sellerId;
 
-    @Column(nullable = false)
+    @Column(name = "start_price", nullable = false, precision = 12, scale = 2)
     private BigDecimal startPrice;
 
-    @Column(nullable = false)
+    @Column(name = "current_price", nullable = false, precision = 12, scale = 2)
     private BigDecimal currentPrice;
 
-    @Column(nullable = false)
+    @Column(name = "min_increment", nullable = false, precision = 12, scale = 2)
     private BigDecimal minIncrement;
 
-    @Column(nullable = false)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "auction_status")
+    private AuctionStatus status = AuctionStatus.DRAFT;
 
-    @Column(nullable = false)
-    private LocalDateTime startTime;
+    @Column(name = "start_time", nullable = false)
+    private Instant startTime;
 
-    @Column(nullable = false)
-    private LocalDateTime endTime;
+    @Column(name = "end_time", nullable = false)
+    private Instant endTime;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
 
-    public Auction() {}
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 
-    // Getters y setters
+    @PrePersist
+    protected void onCreate() {
+        createdAt = Instant.now();
+        updatedAt = Instant.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = Instant.now();
+    }
+
+    // ── Getters & Setters ─────────────────────────────────────────────────
+
     public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+
     public Long getProductId() { return productId; }
     public void setProductId(Long productId) { this.productId = productId; }
+
     public Long getSellerId() { return sellerId; }
     public void setSellerId(Long sellerId) { this.sellerId = sellerId; }
+
     public BigDecimal getStartPrice() { return startPrice; }
     public void setStartPrice(BigDecimal startPrice) { this.startPrice = startPrice; }
+
     public BigDecimal getCurrentPrice() { return currentPrice; }
     public void setCurrentPrice(BigDecimal currentPrice) { this.currentPrice = currentPrice; }
+
     public BigDecimal getMinIncrement() { return minIncrement; }
     public void setMinIncrement(BigDecimal minIncrement) { this.minIncrement = minIncrement; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-    public LocalDateTime getStartTime() { return startTime; }
-    public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }
-    public LocalDateTime getEndTime() { return endTime; }
-    public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public AuctionStatus getStatus() { return status; }
+    public void setStatus(AuctionStatus status) { this.status = status; }
+
+    public Instant getStartTime() { return startTime; }
+    public void setStartTime(Instant startTime) { this.startTime = startTime; }
+
+    public Instant getEndTime() { return endTime; }
+    public void setEndTime(Instant endTime) { this.endTime = endTime; }
+
+    public Instant getCreatedAt() { return createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
 }

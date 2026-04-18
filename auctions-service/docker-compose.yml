@@ -1,20 +1,22 @@
-version: "3.9"
+version: '3.9'
+
 services:
-  auctions-db:
-    image: postgres:15
+
+  postgres:
+    image: postgres:16-alpine
     container_name: auctions_service_db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: auctions_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER:     ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB:       ${DB_NAME:-auctions_service_db}
     ports:
-      - "5432:5432"
+      - "5434:5432"
     volumes:
-      - auctions_db_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
       - ./migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -24,14 +26,17 @@ services:
     container_name: auctions_service_api
     restart: unless-stopped
     depends_on:
-      auctions-db:
+      postgres:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://auctions-db:5432/auctions_db
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
+      PORT:        3003
+      DB_HOST:     postgres
+      DB_PORT:     5432
+      DB_NAME:     ${DB_NAME:-auctions_service_db}
+      DB_USER:     ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
     ports:
-      - "8080:8080"
+      - "3003:3003"
 
 volumes:
-  auctions_db_data:
+  postgres_data:
