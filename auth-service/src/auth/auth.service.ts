@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import type { StringValue } from 'ms';
 import { UsersAuth } from './entities/users-auth.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
@@ -26,7 +27,7 @@ export class AuthService {
     @InjectRepository(RefreshToken)
     private readonly refreshTokenRepository: Repository<RefreshToken>,
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
   async register(dto: RegisterDto) {
     const email = dto.email.toLowerCase().trim();
@@ -96,21 +97,8 @@ export class AuthService {
   }
 
   async refresh(refreshToken: string) {
-    const payload = this.verifyRefreshToken(refreshToken);
-    const account = await this.usersAuthRepository.findOne({
-      where: { id: payload.sub },
-    });
-
-    if (!account || account.status !== 'active') {
-      throw new UnauthorizedException({
-        success: false,
-        message: 'Invalid refresh token',
-      });
-    }
-
     const currentRefreshToken = await this.refreshTokenRepository.findOne({
       where: {
-        userId: account.id,
         refreshToken,
         status: 'active',
       },
@@ -123,8 +111,16 @@ export class AuthService {
       });
     }
 
-    currentRefreshToken.status = 'revoked';
-    await this.refreshTokenRepository.save(currentRefreshToken);
+    const account = await this.usersAuthRepository.findOne({
+      where: { id: currentRefreshToken.userId },
+    });
+
+    if (!account || account.status !== 'active') {
+      throw new UnauthorizedException({
+        success: false,
+        message: 'Invalid refresh token',
+      });
+    }
 
     const tokens = await this.issueAndPersistTokens(account);
 
@@ -138,24 +134,16 @@ export class AuthService {
   }
 
   async logout(refreshToken: string) {
-    const payload = this.verifyRefreshToken(refreshToken);
-    const account = await this.usersAuthRepository.findOne({
-      where: { id: payload.sub },
+    const refreshTokenRecord = await this.refreshTokenRepository.findOne({
+      where: {
+        refreshToken,
+        status: 'active',
+      },
     });
 
-    if (account) {
-      const refreshTokenRecord = await this.refreshTokenRepository.findOne({
-        where: {
-          userId: account.id,
-          refreshToken,
-          status: 'active',
-        },
-      });
-
-      if (refreshTokenRecord) {
-        refreshTokenRecord.status = 'revoked';
-        await this.refreshTokenRepository.save(refreshTokenRecord);
-      }
+    if (refreshTokenRecord) {
+      refreshTokenRecord.status = 'revoked';
+      await this.refreshTokenRepository.save(refreshTokenRecord);
     }
 
     return {
@@ -183,6 +171,12 @@ export class AuthService {
   }
 
   private async issueAndPersistTokens(account: UsersAuth): Promise<TokenPair> {
+
+    await this.refreshTokenRepository.update(
+      { userId: account.id, status: 'active' },
+      { status: 'revoked' },
+    );
+
     const tokens = await this.generateTokens(account);
 
     const refreshTokenEntity = this.refreshTokenRepository.create({
@@ -207,25 +201,9 @@ export class AuthService {
       expiresIn: (process.env.JWT_ACCESS_EXPIRES_IN || '15m') as StringValue,
     });
 
-    const refreshToken = await this.jwtService.signAsync(payload, {
-      secret: process.env.JWT_REFRESH_SECRET || 'refresh-secret-dev',
-      expiresIn: (process.env.JWT_REFRESH_EXPIRES_IN || '7d') as StringValue,
-    });
+    const refreshToken = crypto.randomBytes(256).toString('hex');
 
     return { accessToken, refreshToken };
-  }
-
-  private verifyRefreshToken(refreshToken: string): { sub: number } {
-    try {
-      return this.jwtService.verify<{ sub: number }>(refreshToken, {
-        secret: process.env.JWT_REFRESH_SECRET || 'refresh-secret-dev',
-      });
-    } catch {
-      throw new UnauthorizedException({
-        success: false,
-        message: 'Invalid refresh token',
-      });
-    }
   }
 
   private toUserResponse(account: UsersAuth) {
