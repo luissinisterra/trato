@@ -8,11 +8,11 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import type { AuthUserRequest } from './types/auth-user-request.type';
+import { AuthService } from '../services/auth.service';
+import { RegisterDto } from '../dto/register.dto';
+import { LoginDto } from '../dto/login.dto';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import type { AuthUserRequest } from '../../common/types/auth-user-request.type';
 import type { Response } from 'express';
 
 @Controller('auth')

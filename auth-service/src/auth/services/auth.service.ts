@@ -9,10 +9,11 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import type { StringValue } from 'ms';
-import { UsersAuth } from './entities/users-auth.entity';
-import { RefreshToken } from './entities/refresh-token.entity';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
+import { UserService } from '../../user/services/user.service';
+import { UsersAuth } from '../../user/entities/user.entity';
+import { RefreshToken } from '../entities/refresh-token.entity';
+import { RegisterDto } from '../dto/register.dto';
+import { LoginDto } from '../dto/login.dto';
 
 type TokenPair = {
   accessToken: string;
@@ -22,18 +23,14 @@ type TokenPair = {
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(UsersAuth)
-    private readonly usersAuthRepository: Repository<UsersAuth>,
+    private readonly userService: UserService,
     @InjectRepository(RefreshToken)
     private readonly refreshTokenRepository: Repository<RefreshToken>,
     private readonly jwtService: JwtService,
   ) { }
 
   async register(dto: RegisterDto) {
-    const email = dto.email.toLowerCase().trim();
-    const existing = await this.usersAuthRepository.findOne({
-      where: { email },
-    });
+    const existing = await this.userService.findByEmail(dto.email);
 
     if (existing) {
       throw new ConflictException({
@@ -43,12 +40,7 @@ export class AuthService {
     }
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
-    const account = this.usersAuthRepository.create({
-      email,
-      passwordHash,
-      status: 'active',
-    });
-    const savedAccount = await this.usersAuthRepository.save(account);
+    const savedAccount = await this.userService.create(dto.email, passwordHash);
 
     const tokens = await this.issueAndPersistTokens(savedAccount);
 
@@ -62,10 +54,7 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const email = dto.email.toLowerCase().trim();
-    const account = await this.usersAuthRepository.findOne({
-      where: { email },
-    });
+    const account = await this.userService.findByEmail(dto.email);
 
     if (!account || account.status !== 'active') {
       throw new UnauthorizedException({
@@ -111,9 +100,7 @@ export class AuthService {
       });
     }
 
-    const account = await this.usersAuthRepository.findOne({
-      where: { id: currentRefreshToken.userId },
-    });
+    const account = await this.userService.findById(currentRefreshToken.userId);
 
     if (!account || account.status !== 'active') {
       throw new UnauthorizedException({
@@ -153,9 +140,7 @@ export class AuthService {
   }
 
   async getMe(userId: number) {
-    const account = await this.usersAuthRepository.findOne({
-      where: { id: userId },
-    });
+    const account = await this.userService.findById(userId);
 
     if (!account) {
       throw new UnauthorizedException({

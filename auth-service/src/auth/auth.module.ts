@@ -1,16 +1,17 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
-import { UsersAuth } from './entities/users-auth.entity';
+import { AuthController } from './controllers/auth.controller';
+import { AuthService } from './services/auth.service';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { UserModule } from '../user/user.module';
 import type { StringValue } from 'ms';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UsersAuth, RefreshToken]),
+    UserModule,
+    TypeOrmModule.forFeature([RefreshToken]),
     JwtModule.register({
       secret: process.env.JWT_ACCESS_SECRET || 'access-secret-dev',
       signOptions: {
