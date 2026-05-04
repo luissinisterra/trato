@@ -1,4 +1,4 @@
-package com.trato.auctions_service.dto;
+package com.trato.auction.auction.dto;
 
 import jakarta.validation.constraints.Positive;
 
@@ -9,7 +9,7 @@ import java.time.Instant;
  * All fields are optional for partial updates.
  * Updates are only allowed when the auction is in DRAFT status.
  */
-public class UpdateAuctionRequest {
+public class UpdateAuctionDTO {
 
     @Positive(message = "currentPrice must be greater than 0")
     private BigDecimal currentPrice;

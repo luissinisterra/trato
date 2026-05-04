@@ -1,4 +1,4 @@
-package com.trato.auctions_service.controller;
+package com.trato.auction.common.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;

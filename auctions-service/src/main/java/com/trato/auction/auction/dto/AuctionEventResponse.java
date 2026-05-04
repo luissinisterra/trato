@@ -1,7 +1,7 @@
-package com.trato.auctions_service.dto;
+package com.trato.auction.auction.dto;
 
-import com.trato.auctions_service.model.AuctionEvent;
-import com.trato.auctions_service.model.AuctionEventType;
+import com.trato.auction.auction.entity.AuctionEvent;
+import com.trato.auction.auction.entity.AuctionEventType;
 
 import java.time.Instant;
 

@@ -1,4 +1,4 @@
-package com.trato.auctions_service.dto;
+package com.trato.auction.auction.dto;
 
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-public class CreateAuctionRequest {
+public class CreateAuctionDTO {
 
     @NotNull(message = "productId is required")
     @Positive(message = "productId must be a positive integer")

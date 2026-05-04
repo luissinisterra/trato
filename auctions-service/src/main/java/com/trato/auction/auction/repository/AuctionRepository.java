@@ -1,7 +1,7 @@
-package com.trato.auctions_service.repository;
+package com.trato.auction.auction.repository;
 
-import com.trato.auctions_service.model.Auction;
-import com.trato.auctions_service.model.AuctionStatus;
+import com.trato.auction.auction.entity.Auction;
+import com.trato.auction.auction.entity.AuctionStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

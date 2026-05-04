@@ -1,4 +1,4 @@
-package com.trato.auctions_service.service;
+package com.trato.auction.common.service;
 
 import org.springframework.stereotype.Service;
 import java.util.Map;

@@ -1,11 +1,11 @@
-package com.trato.auctions_service.controller;
+package com.trato.auction.auction.controller;
 
-import com.trato.auctions_service.dto.ApiResponse;
-import com.trato.auctions_service.dto.AuctionResponse;
-import com.trato.auctions_service.dto.CreateAuctionRequest;
-import com.trato.auctions_service.dto.UpdateAuctionRequest;
-import com.trato.auctions_service.model.Auction;
-import com.trato.auctions_service.service.AuctionService;
+import com.trato.auction.common.dto.ApiResponse;
+import com.trato.auction.auction.dto.AuctionResponse;
+import com.trato.auction.auction.dto.CreateAuctionDTO;
+import com.trato.auction.auction.dto.UpdateAuctionDTO;
+import com.trato.auction.auction.entity.Auction;
+import com.trato.auction.auction.service.AuctionService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,13 +31,13 @@ public class AuctionController {
     }
 
     @PostMapping
-    public ResponseEntity<Auction> createAuction(@Valid @RequestBody CreateAuctionRequest req) {
+    public ResponseEntity<Auction> createAuction(@Valid @RequestBody CreateAuctionDTO req) {
         Auction created = auctionService.createAuction(req);
         return ResponseEntity.ok(created);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Auction> updateAuction(@PathVariable Long id, @Valid @RequestBody UpdateAuctionRequest req) {
+    public ResponseEntity<Auction> updateAuction(@PathVariable Long id, @Valid @RequestBody UpdateAuctionDTO req) {
         return auctionService.updateAuction(id, req)
             .map(ResponseEntity::ok)
             .orElse(ResponseEntity.notFound().build());

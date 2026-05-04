@@ -1,7 +1,7 @@
-package com.trato.auctions_service.controller;
+package com.trato.auction.auction.controller;
 
-import com.trato.auctions_service.dto.AuctionEventResponse;
-import com.trato.auctions_service.service.AuctionEventService;
+import com.trato.auction.auction.dto.AuctionEventResponse;
+import com.trato.auction.auction.service.AuctionEventService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

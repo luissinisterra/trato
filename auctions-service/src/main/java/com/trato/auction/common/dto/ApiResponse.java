@@ -1,4 +1,4 @@
-package com.trato.auctions_service.dto;
+package com.trato.auction.common.dto;
 
 /**
  * Universal API wrapper that mirrors the Node.js services' convention:

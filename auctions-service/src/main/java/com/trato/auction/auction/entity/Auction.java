@@ -1,4 +1,4 @@
-package com.trato.auctions_service.model;
+package com.trato.auction.auction.entity;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;

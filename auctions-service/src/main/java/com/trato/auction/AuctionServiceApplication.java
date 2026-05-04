@@ -1,13 +1,13 @@
-package com.trato.auctions_service;
+package com.trato.auction;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class AuctionsServiceApplication {
+public class AuctionServiceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(AuctionsServiceApplication.class, args);
+		SpringApplication.run(AuctionServiceApplication.class, args);
 	}
 
 }

@@ -1,7 +1,7 @@
-package com.trato.auctions_service.dto;
+package com.trato.auction.auction.dto;
 
-import com.trato.auctions_service.model.Auction;
-import com.trato.auctions_service.model.AuctionStatus;
+import com.trato.auction.auction.entity.Auction;
+import com.trato.auction.auction.entity.AuctionStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;

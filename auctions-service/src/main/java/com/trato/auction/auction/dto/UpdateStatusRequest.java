@@ -1,6 +1,6 @@
-package com.trato.auctions_service.dto;
+package com.trato.auction.auction.dto;
 
-import com.trato.auctions_service.model.AuctionStatus;
+import com.trato.auction.auction.entity.AuctionStatus;
 import jakarta.validation.constraints.NotNull;
 
 public class UpdateStatusRequest {

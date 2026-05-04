@@ -1,9 +1,9 @@
-package com.trato.auctions_service.service;
+package com.trato.auction.auction.service;
 
-import com.trato.auctions_service.model.Auction;
-import com.trato.auctions_service.dto.CreateAuctionRequest;
-import com.trato.auctions_service.dto.UpdateAuctionRequest;
-import com.trato.auctions_service.repository.AuctionRepository;
+import com.trato.auction.auction.entity.Auction;
+import com.trato.auction.auction.dto.CreateAuctionDTO;
+import com.trato.auction.auction.dto.UpdateAuctionDTO;
+import com.trato.auction.auction.repository.AuctionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +23,7 @@ public class AuctionService {
         return auctionRepository.findById(id);
     }
 
-    public Auction createAuction(CreateAuctionRequest req) {
+    public Auction createAuction(CreateAuctionDTO req) {
         Auction auction = new Auction();
         auction.setProductId(req.getProductId());
         auction.setSellerId(req.getSellerId());
@@ -35,7 +35,7 @@ public class AuctionService {
         return auctionRepository.save(auction);
     }
 
-    public Optional<Auction> updateAuction(Long id, UpdateAuctionRequest req) {
+    public Optional<Auction> updateAuction(Long id, UpdateAuctionDTO req) {
         Optional<Auction> optional = auctionRepository.findById(id);
         if (optional.isEmpty()) return Optional.empty();
         Auction auction = optional.get();
