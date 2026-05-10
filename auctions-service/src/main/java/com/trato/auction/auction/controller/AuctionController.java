@@ -1,7 +1,6 @@
 package com.trato.auction.auction.controller;
 
 import com.trato.auction.common.dto.ApiResponse;
-import com.trato.auction.auction.dto.AuctionResponse;
 import com.trato.auction.auction.dto.CreateAuctionDTO;
 import com.trato.auction.auction.dto.UpdateAuctionDTO;
 import com.trato.auction.auction.entity.Auction;
@@ -26,8 +25,8 @@ public class AuctionController {
     @GetMapping("/{id}")
     public ResponseEntity<Auction> getAuction(@PathVariable Long id) {
         return auctionService.getAuctionById(id)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
@@ -39,8 +38,8 @@ public class AuctionController {
     @PutMapping("/{id}")
     public ResponseEntity<Auction> updateAuction(@PathVariable Long id, @Valid @RequestBody UpdateAuctionDTO req) {
         return auctionService.updateAuction(id, req)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
@@ -52,4 +51,3 @@ public class AuctionController {
         return ResponseEntity.ok(ApiResponse.ok("Auction deleted"));
     }
 }
-

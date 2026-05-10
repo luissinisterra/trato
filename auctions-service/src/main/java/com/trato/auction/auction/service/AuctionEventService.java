@@ -1,7 +1,6 @@
 package com.trato.auction.auction.service;
 
 import com.trato.auction.auction.dto.AuctionEventResponse;
-import com.trato.auction.auction.entity.AuctionEvent;
 import com.trato.auction.auction.repository.AuctionEventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
