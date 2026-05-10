@@ -1,33 +1,34 @@
 # AGENTS
 
-## Repository shape
-- No root workspace runner (`package.json`, lockfile, or task config). Run commands inside each service directory.
-- Active code lives in `user-service` and `bid-service` (Express + PostgreSQL).
-- `auctions-service` is Spring Boot (Java) + PostgreSQL.
-- `auth-service` is currently an empty placeholder.
+## Architecture Overview
+- **Entry point**: `gateway-service` on port 3000 (NestJS). All client requests go through here.
+- Services forward to backend microservices based on path: `/auth/*` → 3001, `/users/*` → 3002, `/auctions/*` → 3003, `/bids/*` → 3005.
 
-## Entrypoints and boundaries
-- `user-service/src/app.js`: `/health`, `/users`, and nested `/users/:userId/profile` on port `3001`.
-- `bid-service/src/app.js`: `/health`, `/bids`, `/logs` on port `3002`.
-- `auctions-service` (Spring Boot): `/health`, `/auctions`, `/auction-events` on port `3003`.
-- Each service initializes DB schema via `migrations/init.sql` mounted in Docker Compose.
+## Services and Ports
+| Service | Port | Stack | DB Port (host) |
+|---------|------|-------|----------------|
+| gateway-service | 3000 | NestJS | - |
+| auth-service | 3001 | NestJS + TypeORM | 5435 |
+| user-service | 3002 | Express + PG | 5432 |
+| auctions-service | 3003 | Spring Boot (Java 21) | 5434 |
+| bid-service | 3005 | Express + PG | 5433 |
+| product-service | - | (not implemented) | - |
+| payment-service | - | (not implemented) | - |
+| report-service | - | (not implemented) | - |
 
 ## Commands
-- Per service (`user-service` or `bid-service`): `npm install`, `npm run dev`, `npm start`.
-- Per service full stack (API + Postgres): `docker compose up --build`.
-- Auctions service (Spring Boot): `./mvnw test`, `./mvnw spring-boot:run`.
-- Auctions service full stack (API + Postgres): `docker compose up --build` (run inside `auctions-service`).
-
-## Verification
-- No test/lint/typecheck scripts are defined.
-- Verify with health and endpoint smoke checks (for example `GET /health`, then the service routes above).
+- **Gateway**: `cd gateway-service && npm run start:dev` (port 3000)
+- **Auth**: `cd auth-service && npm run start:dev` (port 3001)
+- **User/Bid** (Express): `cd <service> && npm run dev`
+- **Auctions** (Spring Boot): `cd auctions-service && ./mvnw spring-boot:run`
+- **Full stack** (API + Postgres): `docker compose up --build` inside each service directory
 
 ## Important gotchas
-- `bid-service/docker-compose.yml` maps DB host port `5433` to container `5432`, but `.env.example` uses `DB_PORT=5432`. If running API outside Docker, set `DB_PORT=5433` for bid-service.
-- `user-service/src/config/database.js` default DB credentials (`root`/`1234`) do not match `.env.example` (`postgres`/`postgres`). Prefer explicit env vars; do not rely on defaults.
-- `auctions-service` runs on Java 21 (`pom.xml` uses `java.version=21`).
-- Postgres init scripts in `migrations/init.sql` only run on first container init for a fresh DB volume. If schema changes seem ignored, recreate the volume.
+- Gateway expects services on specific ports. Start all backend services before testing through gateway.
+- `bid-service/.env` sets `DB_PORT=5433` (host), but container maps to 5432. Use 5433 when running API outside Docker.
+- Postgres init scripts (`migrations/init.sql`) only run on first container init. Recreate volume if schema changes are ignored.
+- `auctions-service/pom.xml` requires Java 21.
 
-## API conventions to preserve
-- Both services return JSON with `success` (`true/false`) and use `express-validator` errors as `{ success: false, errors: [...] }`.
-- Bid lifecycle rules are enforced in `bid-service/src/controllers/bidController.js` (status transitions, delete restrictions, and automatic bid log writes inside transactions).
+## API conventions
+- Express services return `{ success: true/false, data: ... }` and validation errors as `{ success: false, errors: [...] }`.
+- NestJS gateway uses `{ success, data, message }` format.

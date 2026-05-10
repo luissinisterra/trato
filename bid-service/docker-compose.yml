@@ -29,14 +29,14 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      PORT:        3002
+      PORT:        3005
       DB_HOST:     postgres
       DB_PORT:     5432
       DB_NAME:     ${DB_NAME:-bid_service_db}
       DB_USER:     ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
     ports:
-      - "3002:3002"
+      - "3005:3005"
 
 volumes:
   postgres_data:
