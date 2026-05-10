@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Patch, Delete, Req, UseGuards } from '@nestjs/common';
+import { Controller, All, Req, UseGuards } from '@nestjs/common';
 import { Request } from 'express';
 import { AuctionService } from './auction.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -8,12 +8,10 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 export class AuctionController {
   constructor(private readonly auctionService: AuctionService) {}
 
-  @Get()
-  @Post()
-  @Put()
-  @Patch()
-  @Delete()
+  @All()
+  @All('*path')
   forward(@Req() request: Request) {
-    return this.auctionService.forward(request, request.url);
+    const path = request.path;
+    return this.auctionService.forward(request, path);
   }
 }
