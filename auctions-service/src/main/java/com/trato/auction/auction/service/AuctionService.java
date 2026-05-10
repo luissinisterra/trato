@@ -6,6 +6,10 @@ import com.trato.auction.auction.dto.UpdateAuctionDTO;
 import com.trato.auction.auction.repository.AuctionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,6 +18,11 @@ import java.util.Optional;
 public class AuctionService {
     @Autowired
     private AuctionRepository auctionRepository;
+
+    @Value("${PRODUCT_SERVICE_URL:http://host.docker.internal:3004}")
+    private String productServiceUrl;
+
+    private final RestTemplate restTemplate = new RestTemplate();
 
     public List<Auction> getAllAuctions() {
         return auctionRepository.findAll();
@@ -24,6 +33,19 @@ public class AuctionService {
     }
 
     public Auction createAuction(CreateAuctionDTO req) {
+        // Validate product exists via Product Service
+        try {
+            String url = productServiceUrl + "/products/" + req.getProductId();
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                throw new RuntimeException("Product not valid or not found: " + req.getProductId());
+            }
+        } catch (HttpClientErrorException e) {
+            throw new RuntimeException("Product validation failed (Status " + e.getStatusCode() + ") for ID: " + req.getProductId());
+        } catch (Exception e) {
+            throw new RuntimeException("Error communicating with Product Service: " + e.getMessage());
+        }
+
         Auction auction = new Auction();
         auction.setProductId(req.getProductId());
         auction.setSellerId(req.getSellerId());

@@ -27,7 +27,7 @@ public class Auction {
     @Column(name = "min_increment", nullable = false, precision = 12, scale = 2)
     private BigDecimal minIncrement;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = AuctionStatusConverter.class)
     @Column(nullable = false, columnDefinition = "auction_status")
     private AuctionStatus status = AuctionStatus.DRAFT;
 

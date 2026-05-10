@@ -14,6 +14,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 export class BidController {
   constructor(private readonly bidService: BidService) {}
 
+  @All()
   @All('*path')
   forward(@Req() request: Request) {
     const path = request.path;
