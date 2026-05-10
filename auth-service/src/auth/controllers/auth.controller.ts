@@ -129,4 +129,14 @@ export class AuthController {
 
     return this.authService.getMe(userId);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('validate')
+  async validate(@Req() req: AuthUserRequest) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      throw new UnauthorizedException('Token inválido');
+    }
+    return { user: req.user };
+  }
 }

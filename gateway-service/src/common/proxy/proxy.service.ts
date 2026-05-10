@@ -62,10 +62,14 @@ export class ProxyService {
       'Content-Type': 'application/json',
     };
 
-    // Reenvía el Bearer token al microservicio
     const auth = request.headers['authorization'];
     if (auth) {
       headers['Authorization'] = auth as string;
+    }
+
+    const cookie = request.headers['cookie'];
+    if (cookie) {
+      headers['Cookie'] = cookie as string;
     }
 
     return headers;
