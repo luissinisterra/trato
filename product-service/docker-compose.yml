@@ -12,8 +12,8 @@ services:
       POSTGRES_DB:       ${DB_NAME:-product_service_db}
     ports:
       # host_port:container_port
-      # Using 5435 on the host to avoid conflicts with other microservices
-      - "5435:5432"
+      # Using 5436 on the host to avoid conflicts with other microservices
+      - "5436:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
