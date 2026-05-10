@@ -13,7 +13,7 @@ import type { StringValue } from 'ms';
     UserModule,
     TypeOrmModule.forFeature([RefreshToken]),
     JwtModule.register({
-      secret: process.env.JWT_ACCESS_SECRET || 'access-secret-dev',
+      secret: process.env.JWT_ACCESS_SECRET,
       signOptions: {
         expiresIn: (process.env.JWT_ACCESS_EXPIRES_IN || '15m') as StringValue,
       },
