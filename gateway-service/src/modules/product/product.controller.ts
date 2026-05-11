@@ -17,7 +17,7 @@ export class ProductController {
   @All()
   @All('*path')
   forward(@Req() request: Request) {
-    const path = request.path;
-    return this.productService.forward(request, path);
+    const path = request.path.replace(/^\/products/, '');
+    return this.productService.forward(request, `/products${path}`);
   }
 }

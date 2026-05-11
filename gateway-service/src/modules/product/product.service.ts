@@ -11,7 +11,7 @@ export class ProductService {
     private readonly proxyService: ProxyService,
     private readonly configService: ConfigService,
   ) {
-    this.baseUrl = this.configService.get<string>('PRODUCT_SERVICE_URL');
+    this.baseUrl = this.configService.get<string>('AUTH_SERVICE_URL');
   }
 
   forward(request: Request, path: string): Promise<any> {
