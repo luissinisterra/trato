@@ -28,6 +28,7 @@ export class ProxyService {
     const url = queryString ? `${targetUrl}${queryString}` : targetUrl;
 
     const headers = this.buildHeaders(request);
+    headers['Host'] = `localhost:${new URL(targetUrl).port}`;
 
     const config: AxiosRequestConfig = { headers };
 
@@ -60,6 +61,7 @@ export class ProxyService {
   private buildHeaders(request: Request): Record<string, string> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
     };
 
     const auth = request.headers['authorization'];
@@ -70,6 +72,11 @@ export class ProxyService {
     const cookie = request.headers['cookie'];
     if (cookie) {
       headers['Cookie'] = cookie as string;
+    }
+
+    const userAgent = request.headers['user-agent'];
+    if (userAgent) {
+      headers['User-Agent'] = userAgent as string;
     }
 
     return headers;

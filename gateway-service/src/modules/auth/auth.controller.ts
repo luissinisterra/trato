@@ -48,10 +48,9 @@ export class AuthController {
    * Útil para expansión futura sin modificar el gateway.
    */
   @Public()
-  @All()
   @All('*path')
   catchAll(@Req() request: Request) {
-    const path = request.path;
-    return this.authService.forward(request, path);
+    const fullPath = request.path;
+    return this.authService.forward(request, fullPath);
   }
 }

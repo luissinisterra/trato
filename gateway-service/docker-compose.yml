@@ -1,0 +1,136 @@
+version: '3.9'
+
+services:
+  gateway-service:
+    build: .
+    container_name: gateway_service
+    restart: unless-stopped
+    environment:
+      PORT: ${PORT:-3000}
+      AUTH_SERVICE_URL: http://auth_service_api:3000
+      USER_SERVICE_URL: http://user-service:3000
+      AUCTION_SERVICE_URL: http://auctions_service:3003
+      PRODUCT_SERVICE_URL: http://product-service:3000
+      BID_SERVICE_URL: http://bid_service:3000
+      PAYMENT_SERVICE_URL: http://payment-service:3000
+      REPORT_SERVICE_URL: http://report-service:3000
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:4200}
+    ports:
+      - '3000:3000'
+    depends_on:
+      - auth-service
+      - auctions-service
+      - bid-service
+
+  auth-service:
+    build: ../auth-service
+    container_name: auth_service_api
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      DB_HOST: auth_db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-auth_service_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-access-secret-dev}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-refresh-secret-dev}
+      JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+    ports:
+      - '3001:3000'
+    depends_on:
+      auth_db:
+        condition: service_healthy
+
+  auth_db:
+    image: postgres:16-alpine
+    container_name: auth_service_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-auth_service_db}
+    ports:
+      - '5435:5432'
+    volumes:
+      - auth_postgres_data:/var/lib/postgresql/data
+      - ../auth-service/migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-postgres}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auctions-service:
+    build: ../auctions-service
+    container_name: auctions_service
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://auctions_db:5432/auctions_db
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - '3003:8080'
+    depends_on:
+      auctions_db:
+        condition: service_healthy
+
+  auctions_db:
+    image: postgres:16-alpine
+    container_name: auctions_service_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: auctions_db
+    ports:
+      - '5434:5432'
+    volumes:
+      - auctions_postgres_data:/var/lib/postgresql/data
+      - ../auctions-service/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-postgres}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  bid-service:
+    build: ../bid-service
+    container_name: bid_service
+    restart: unless-stopped
+    environment:
+      DB_HOST: bid_db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-bid_service_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - '3005:3000'
+    depends_on:
+      bid_db:
+        condition: service_healthy
+
+  bid_db:
+    image: postgres:16-alpine
+    container_name: bid_service_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-bid_service_db}
+    ports:
+      - '5433:5432'
+    volumes:
+      - bid_postgres_data:/var/lib/postgresql/data
+      - ../bid-service/migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-postgres}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  auth_postgres_data:
+  auctions_postgres_data:
+  bid_postgres_data:

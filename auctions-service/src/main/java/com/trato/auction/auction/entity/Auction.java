@@ -28,8 +28,8 @@ public class Auction {
     private BigDecimal minIncrement;
 
     @Convert(converter = AuctionStatusConverter.class)
-    @Column(nullable = false, columnDefinition = "auction_status")
-    private AuctionStatus status = AuctionStatus.DRAFT;
+    @Column(name = "status", nullable = false, length = 50)
+    private String status = "draft";
 
     @Column(name = "start_time", nullable = false)
     private Instant startTime;
@@ -73,8 +73,8 @@ public class Auction {
     public BigDecimal getMinIncrement() { return minIncrement; }
     public void setMinIncrement(BigDecimal minIncrement) { this.minIncrement = minIncrement; }
 
-    public AuctionStatus getStatus() { return status; }
-    public void setStatus(AuctionStatus status) { this.status = status; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
     public Instant getStartTime() { return startTime; }
     public void setStartTime(Instant startTime) { this.startTime = startTime; }
