@@ -112,3 +112,38 @@ func (c *ProductController) GetProductByID(ctx *gin.Context) {
 		"data":    product,
 	})
 }
+
+// DeleteProduct handler for DELETE /products/:id
+func (c *ProductController) DeleteProduct(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"error":   "Invalid product ID",
+		})
+		return
+	}
+
+	err = c.service.DeleteProduct(ctx.Request.Context(), id)
+	if err != nil {
+		if errors.Is(err, common.ErrProductNotFound) {
+			ctx.JSON(http.StatusNotFound, gin.H{
+				"success": false,
+				"error":   "Product not found",
+			})
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error":   "Internal server error",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Product deleted",
+	})
+}

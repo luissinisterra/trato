@@ -46,6 +46,7 @@ func main() {
 		productGroup.POST("", prodController.CreateProduct)
 		productGroup.GET("", prodController.GetProducts)
 		productGroup.GET("/:id", prodController.GetProductByID)
+		productGroup.DELETE("/:id", prodController.DeleteProduct)
 	}
 
 	// Start server on port from environment or default to 3004

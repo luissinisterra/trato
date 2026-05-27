@@ -14,6 +14,7 @@ type ProductService interface {
 	CreateProduct(ctx context.Context, req *dto.CreateProductRequest) (*dto.ProductResponse, error)
 	GetProducts(ctx context.Context, page, limit int) ([]dto.ProductResponse, error)
 	GetProductByID(ctx context.Context, id int) (*dto.ProductResponse, error)
+	DeleteProduct(ctx context.Context, id int) error
 }
 
 type productService struct {
@@ -90,6 +91,10 @@ func (s *productService) GetProductByID(ctx context.Context, id int) (*dto.Produ
 	}
 
 	return s.mapToResponse(product), nil
+}
+
+func (s *productService) DeleteProduct(ctx context.Context, id int) error {
+	return s.repo.DeleteProduct(ctx, id)
 }
 
 // Helper to map entity to response DTO

@@ -84,6 +84,20 @@ func (r *MemoryProductRepository) GetProductByID(ctx context.Context, id int) (*
 	return nil, common.ErrProductNotFound
 }
 
+func (r *MemoryProductRepository) DeleteProduct(ctx context.Context, id int) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	for i, p := range r.products {
+		if p.ID == id {
+			r.products = append(r.products[:i], r.products[i+1:]...)
+			return nil
+		}
+	}
+
+	return common.ErrProductNotFound
+}
+
 func deepCopyProduct(p entity.Product) entity.Product {
 	cp := p
 	if p.Images != nil {

@@ -226,3 +226,22 @@ func (r *PostgresProductRepository) GetProductByID(ctx context.Context, id int) 
 
 	return &p, nil
 }
+
+func (r *PostgresProductRepository) DeleteProduct(ctx context.Context, id int) error {
+	query := `DELETE FROM products WHERE id = $1`
+	result, err := r.db.ExecContext(ctx, query, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return common.ErrProductNotFound
+	}
+
+	return nil
+}
