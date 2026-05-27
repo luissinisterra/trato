@@ -1,0 +1,326 @@
+previews:
+  generation: off
+
+envVarGroups:
+  - name: jwt-secrets
+    envVars:
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+  - name: notify-secrets
+    envVars:
+      - key: NOTIFY_SECRET
+        generateValue: true
+      - key: INTERNAL_API_KEY
+        generateValue: true
+
+services:
+  - name: trato-gateway
+    type: web
+    runtime: docker
+    rootDir: microservices/gateway-service
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: AUTH_SERVICE_URL
+        sync: false
+      - key: USER_SERVICE_URL
+        sync: false
+      - key: AUCTION_SERVICE_URL
+        sync: false
+      - key: PRODUCT_SERVICE_URL
+        sync: false
+      - key: BID_SERVICE_URL
+        sync: false
+      - key: PAYMENT_SERVICE_URL
+        sync: false
+      - key: REPORT_SERVICE_URL
+        sync: false
+      - key: NOTIFICATION_SERVICE_URL
+        sync: false
+      - key: AI_AGENT_SERVICE_URL
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+
+  - name: trato-auth
+    type: web
+    runtime: docker
+    rootDir: microservices/auth-service
+    envVars:
+      - key: PORT
+        value: 3001
+      - key: DB_HOST
+        fromDatabase:
+          name: trato-auth-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: trato-auth-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: trato-auth-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: trato-auth-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: trato-auth-db
+          property: password
+      - fromGroup: jwt-secrets
+      - fromGroup: notify-secrets
+      - key: JWT_ACCESS_EXPIRES_IN
+        value: 1h
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 7d
+      - key: WORKER_URL
+        sync: false
+
+  - name: trato-user
+    type: web
+    runtime: docker
+    rootDir: microservices/user-service
+    envVars:
+      - key: PORT
+        value: 3002
+      - key: DB_HOST
+        fromDatabase:
+          name: trato-user-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: trato-user-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: trato-user-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: trato-user-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: trato-user-db
+          property: password
+
+  - name: trato-auctions
+    type: web
+    runtime: docker
+    rootDir: microservices/auctions-service
+    envVars:
+      - key: PORT
+        value: 3003
+      - key: DB_HOST
+        fromDatabase:
+          name: trato-auctions-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: trato-auctions-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: trato-auctions-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: trato-auctions-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: trato-auctions-db
+          property: password
+      - fromGroup: notify-secrets
+      - key: WORKER_URL
+        sync: false
+
+  - name: trato-product
+    type: web
+    runtime: docker
+    rootDir: microservices/product-service
+    envVars:
+      - key: PORT
+        value: 3004
+      - key: DB_HOST
+        fromDatabase:
+          name: trato-product-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: trato-product-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: trato-product-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: trato-product-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: trato-product-db
+          property: password
+
+  - name: trato-bid
+    type: web
+    runtime: docker
+    rootDir: microservices/bid-service
+    envVars:
+      - key: PORT
+        value: 3005
+      - key: DB_HOST
+        fromDatabase:
+          name: trato-bid-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: trato-bid-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: trato-bid-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: trato-bid-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: trato-bid-db
+          property: password
+      - fromGroup: notify-secrets
+      - key: WORKER_URL
+        sync: false
+
+  - name: trato-payment
+    type: web
+    runtime: docker
+    rootDir: microservices/payment-service
+    envVars:
+      - key: PORT
+        value: 3006
+      - key: DB_HOST
+        fromDatabase:
+          name: trato-payment-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: trato-payment-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: trato-payment-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: trato-payment-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: trato-payment-db
+          property: password
+      - fromGroup: jwt-secrets
+      - key: GATEWAY_URL
+        sync: false
+      - key: AUCTIONS_SERVICE_URL
+        sync: false
+
+  - name: trato-report
+    type: web
+    runtime: docker
+    rootDir: microservices/report-service
+    envVars:
+      - key: PORT
+        value: 3007
+      - key: DB_HOST
+        fromDatabase:
+          name: trato-report-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: trato-report-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: trato-report-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: trato-report-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: trato-report-db
+          property: password
+      - fromGroup: jwt-secrets
+      - key: GATEWAY_URL
+        sync: false
+      - key: AUCTIONS_SERVICE_URL
+        sync: false
+      - key: BID_SERVICE_URL
+        sync: false
+      - key: USER_SERVICE_URL
+        sync: false
+
+  - name: trato-notification
+    type: web
+    runtime: docker
+    rootDir: microservices/notification-service
+    envVars:
+      - key: PORT
+        value: 3008
+      - key: MONGODB_URI
+        sync: false
+      - fromGroup: notify-secrets
+      - key: AUTH_SERVICE_URL
+        sync: false
+
+  - name: trato-ai-agent
+    type: web
+    runtime: docker
+    rootDir: agent/ai-auction-advisor
+    envVars:
+      - key: PORT
+        value: 3009
+      - key: DATABASE_URL
+        fromDatabase:
+          name: trato-agent-db
+          property: connectionString
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: google/gemini-2.0-flash
+      - key: TRATO_GATEWAY_URL
+        sync: false
+
+databases:
+  - name: trato-auth-db
+    plan: basic-256mb
+    databaseName: auth_service_db
+  - name: trato-user-db
+    plan: basic-256mb
+    databaseName: user_service_db
+  - name: trato-auctions-db
+    plan: basic-256mb
+    databaseName: auctions_service_db
+  - name: trato-product-db
+    plan: basic-256mb
+    databaseName: product_service_db
+  - name: trato-bid-db
+    plan: basic-256mb
+    databaseName: bid_service_db
+  - name: trato-payment-db
+    plan: basic-256mb
+    databaseName: payment_db
+  - name: trato-report-db
+    plan: basic-256mb
+    databaseName: report_db
+  - name: trato-agent-db
+    plan: basic-256mb
+    databaseName: agent_service_db
