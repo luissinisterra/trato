@@ -3,12 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 import { ProxyService } from '../../common/proxy/proxy.service';
 
-/**
- * AuthService
- *
- * Reenvía peticiones al auth-service.
- * La URL base se toma de la variable de entorno AUTH_SERVICE_URL.
- */
 @Injectable()
 export class AuthService {
   private readonly baseUrl: string;
@@ -17,7 +11,7 @@ export class AuthService {
     private readonly proxyService: ProxyService,
     private readonly configService: ConfigService,
   ) {
-    this.baseUrl = this.configService.get<string>('AUTH_SERVICE_URL');
+    this.baseUrl = this.configService.get<string>('AUTH_SERVICE_URL') || 'http://localhost:3001';
   }
 
   forward(request: Request, path: string): Promise<any> {

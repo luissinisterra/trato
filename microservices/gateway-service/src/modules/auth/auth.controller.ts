@@ -43,14 +43,30 @@ export class AuthController {
     return this.authService.forward(request, '/auth/refresh');
   }
 
+  @Public()
+  @Post('logout')
+  logout(@Req() request: Request) {
+    return this.authService.forward(request, '/auth/logout');
+  }
+
   /**
    * Captura cualquier otra ruta bajo /auth/*
    * Útil para expansión futura sin modificar el gateway.
    */
   @Public()
-  @All('*path')
-  catchAll(@Req() request: Request) {
-    const fullPath = request.path;
+  @All()
+  catchAllRoot(@Req() request: Request) {
+    return this.catchAll(request);
+  }
+
+  @Public()
+  @All('*')
+  catchAllSub(@Req() request: Request) {
+    return this.catchAll(request);
+  }
+
+  private catchAll(request: Request) {
+    const fullPath = request.path.replace(/^\/api/, '');
     return this.authService.forward(request, fullPath);
   }
 }
