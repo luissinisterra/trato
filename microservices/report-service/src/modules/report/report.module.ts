@@ -5,11 +5,12 @@ import { ReportEntity } from './entities/report.entity';
 import { ReportController } from './controllers/report.controller';
 import { ReportService } from './services/report.service';
 import { ReportRequestModule } from '../report-request/report-request.module';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
 @Module({
   imports: [TypeOrmModule.forFeature([ReportEntity]), HttpModule, ReportRequestModule],
   controllers: [ReportController],
-  providers: [ReportService],
+  providers: [ReportService, JwtAuthGuard],
   exports: [ReportService],
 })
 export class ReportModule {}

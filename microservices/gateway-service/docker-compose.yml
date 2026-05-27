@@ -6,10 +6,12 @@ services:
     environment:
       PORT: ${PORT:-3000}
       AUTH_SERVICE_URL: http://auth_service_api:3000
-      USER_SERVICE_URL: http://user-service:3000
+      USER_SERVICE_URL: http://user-service:3002
       AUCTION_SERVICE_URL: http://auctions_service:3003
       PRODUCT_SERVICE_URL: http://product_service:3004
       BID_SERVICE_URL: http://bid_service:3000
+      PAYMENT_SERVICE_URL: http://payment_service:3006
+      REPORT_SERVICE_URL: http://report_service:3007
       NOTIFICATION_SERVICE_URL: http://notification-service:3008
       AI_AGENT_SERVICE_URL: http://ai-agent:3009
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:4200}
@@ -17,8 +19,11 @@ services:
       - '3000:3000'
     depends_on:
       - auth-service
+      - user-service
       - auctions-service
       - bid-service
+      - payment-service
+      - report-service
       - product-service
       - notification-service
       - ai-agent
@@ -39,7 +44,7 @@ services:
       JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
       WORKER_URL: http://notification-service:3008
-      NOTIFY_SECRET: ${NOTIFY_SECRET}
+      NOTIFY_SECRET: ${NOTIFY_SECRET:-notify-secret-dev}
     ports:
       - '3001:3000'
     depends_on:
@@ -75,7 +80,7 @@ services:
       SPRING_DATASOURCE_USERNAME: ${DB_USER:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-postgres}
       WORKER_URL: https://trato-notifications.luchoporst.workers.dev
-      NOTIFY_SECRET: ${NOTIFY_SECRET}
+      NOTIFY_SECRET: ${NOTIFY_SECRET:-notify-secret-dev}
     ports:
       - '3003:3003'
     depends_on:
@@ -113,7 +118,7 @@ services:
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       WORKER_URL: http://notification-service:3008
-      NOTIFY_SECRET: ${NOTIFY_SECRET}
+      NOTIFY_SECRET: ${NOTIFY_SECRET:-notify-secret-dev}
     ports:
       - '3005:3000'
     depends_on:
@@ -135,6 +140,120 @@ services:
       - ../bid-service/migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-postgres}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  user-service:
+    build: ../user-service
+    container_name: user_service
+    restart: unless-stopped
+    environment:
+      PORT: 3002
+      DB_HOST: user_db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-user_service_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - '3002:3002'
+    depends_on:
+      user_db:
+        condition: service_healthy
+
+  user_db:
+    image: postgres:16-alpine
+    container_name: user_service_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-user_service_db}
+    ports:
+      - '5438:5432'
+    volumes:
+      - user_postgres_data:/var/lib/postgresql/data
+      - ../user-service/migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-postgres}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  payment-service:
+    build: ../payment-service
+    container_name: payment_service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3006
+      DB_HOST: payment_db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: payment_db
+      AUCTIONS_SERVICE_URL: http://auctions_service:3003
+    ports:
+      - '3006:3006'
+    depends_on:
+      payment_db:
+        condition: service_healthy
+
+  payment_db:
+    image: postgres:16-alpine
+    container_name: payment_service_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: payment_db
+    ports:
+      - '5439:5432'
+    volumes:
+      - payment_postgres_data:/var/lib/postgresql/data
+      - ../payment-service/migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  report-service:
+    build: ../report-service
+    container_name: report_service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3007
+      DB_HOST: report_db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: report_db
+      AUCTIONS_SERVICE_URL: http://auctions_service:3003
+      BID_SERVICE_URL: http://bid_service:3000
+      USER_SERVICE_URL: http://user-service:3002
+    ports:
+      - '3007:3007'
+    depends_on:
+      report_db:
+        condition: service_healthy
+
+  report_db:
+    image: postgres:16-alpine
+    container_name: report_service_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: report_db
+    ports:
+      - '5440:5432'
+    volumes:
+      - report_postgres_data:/var/lib/postgresql/data
+      - ../report-service/migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -182,15 +301,19 @@ services:
     environment:
       PORT: 3008
       MONGODB_URI: mongodb://notification_db:27017/trato_notifications
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      RABBITMQ_QUEUE: notification_events
       INTERNAL_API_KEY: ${INTERNAL_API_KEY:-change-me-in-production}
       AUTH_SERVICE_URL: http://auth_service_api:3000
       CLOUDFLARE_WORKER_URL: ${CLOUDFLARE_WORKER_URL:-https://trato-notifications.luchoporst.workers.dev}
-      CLOUDFLARE_NOTIFY_SECRET: ${CLOUDFLARE_NOTIFY_SECRET}
-      NOTIFY_SECRET: ${NOTIFY_SECRET}
+      CLOUDFLARE_NOTIFY_SECRET: ${CLOUDFLARE_NOTIFY_SECRET:-notify-secret-dev}
+      NOTIFY_SECRET: ${NOTIFY_SECRET:-notify-secret-dev}
     ports:
       - '3008:3008'
     depends_on:
       notification_db:
+        condition: service_started
+      rabbitmq:
         condition: service_started
 
   notification_db:
@@ -237,6 +360,17 @@ services:
       timeout: 5s
       retries: 5
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq_service
+    restart: unless-stopped
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
+
 volumes:
   auth_postgres_data:
   auctions_postgres_data:
@@ -244,3 +378,6 @@ volumes:
   product_postgres_data:
   notification_mongo_data:
   agent_postgres_data:
+  user_postgres_data:
+  payment_postgres_data:
+  report_postgres_data:
