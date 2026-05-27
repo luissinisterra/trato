@@ -12,8 +12,8 @@ services:
       AUCTION_SERVICE_URL: http://auctions_service:3003
       PRODUCT_SERVICE_URL: http://product-service:3000
       BID_SERVICE_URL: http://bid_service:3000
-      PAYMENT_SERVICE_URL: http://payment-service:3000
-      REPORT_SERVICE_URL: http://report-service:3000
+      PAYMENT_SERVICE_URL: http://payment-service:3006
+      REPORT_SERVICE_URL: http://report-service:3007
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:4200}
     ports:
       - '3000:3000'
@@ -21,6 +21,8 @@ services:
       - auth-service
       - auctions-service
       - bid-service
+      - payment-service
+      - report-service
 
   auth-service:
     build: ../auth-service
@@ -130,7 +132,83 @@ services:
       timeout: 5s
       retries: 5
 
+  # Payment service and DB
+  payment-service:
+    build: ../payment-service
+    container_name: payment_service
+    restart: unless-stopped
+    environment:
+      PORT: 3006
+      DB_HOST: payment_db
+      DB_PORT: 5432
+      DB_NAME: payment_db
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - '3006:3006'
+    depends_on:
+      payment_db:
+        condition: service_healthy
+
+  payment_db:
+    image: postgres:16-alpine
+    container_name: payment_service_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: payment_db
+    ports:
+      - '5436:5432'
+    volumes:
+      - payment_postgres_data:/var/lib/postgresql/data
+      - ../payment-service/migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-postgres}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Report service and DB
+  report-service:
+    build: ../report-service
+    container_name: report_service
+    restart: unless-stopped
+    environment:
+      PORT: 3007
+      DB_HOST: report_db
+      DB_PORT: 5432
+      DB_NAME: report_db
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - '3007:3007'
+    depends_on:
+      report_db:
+        condition: service_healthy
+
+  report_db:
+    image: postgres:16-alpine
+    container_name: report_service_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: report_db
+    ports:
+      - '5437:5432'
+    volumes:
+      - report_postgres_data:/var/lib/postgresql/data
+      - ../report-service/migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-postgres}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   auth_postgres_data:
   auctions_postgres_data:
   bid_postgres_data:
+  payment_postgres_data:
+  report_postgres_data:
