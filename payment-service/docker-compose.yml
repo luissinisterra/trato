@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: payment-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: payment_db
+    ports:
+      - "5436:5432"
+    volumes:
+      - payment-db-volume:/var/lib/postgresql/data
+      - ./migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - payment-network
+
+  app:
+    build: .
+    container_name: payment-service
+    ports:
+      - "3006:3006"
+    environment:
+      NODE_ENV: production
+      PORT: 3006
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: payment_db
+      AUCTIONS_SERVICE_URL: http://host.docker.internal:3003
+    depends_on:
+      - postgres
+    networks:
+      - payment-network
+
+volumes:
+  payment-db-volume:
+
+networks:
+  payment-network:
