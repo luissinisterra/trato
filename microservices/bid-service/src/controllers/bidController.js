@@ -1,4 +1,5 @@
 const pool = require('../config/database');
+const { sendNotification } = require('../services/notificationService');
 
 // ── Helpers ───────────────────────────────────────────────
 
@@ -41,13 +42,25 @@ const getBidById = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-// POST /bids  — crea bid y registra log automáticamente
+// POST /bids  — crea bid, registra log y notifica si alguien fue superado
 const createBid = async (req, res, next) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
-    const { auction_id, user_id, amount } = req.body;
+    const { auction_id, user_id, amount, owner_id } = req.body;
+
+    // Encontrar puja más alta actual (para detectar superación)
+    const prevHighest = await client.query(
+      `SELECT user_id, amount FROM bids
+       WHERE auction_id = $1 AND status != 'cancelled'
+       ORDER BY amount DESC LIMIT 1`,
+      [auction_id]
+    );
+    const outbidTarget = prevHighest.rows.length && prevHighest.rows[0].user_id !== user_id
+      ? prevHighest.rows[0]
+      : null;
+
     const { rows } = await client.query(
       `INSERT INTO bids (auction_id, user_id, amount)
        VALUES ($1, $2, $3)
@@ -59,11 +72,34 @@ const createBid = async (req, res, next) => {
     await insertLog(client, {
       bid_id: bid.id,
       action: 'created',
-      previous_amount: null,
+      previous_amount: outbidTarget?.amount ?? null,
       new_amount: bid.amount,
     });
 
     await client.query('COMMIT');
+
+    // Notificar al usuario que fue superado (fuera de transacción)
+    if (outbidTarget) {
+      sendNotification({
+        userId: outbidTarget.user_id,
+        type: 'OUTBID',
+        title: 'Superaron tu puja',
+        message: `Alguien ofertó $${amount} en la subasta #${auction_id} y superó tu puja de $${outbidTarget.amount}`,
+        metadata: { auctionId: auction_id, amount },
+      });
+    }
+
+    // Notificar al dueño de la subasta que recibió una puja
+    if (owner_id && String(owner_id) !== String(user_id)) {
+      sendNotification({
+        userId: owner_id,
+        type: 'BID_CREATED',
+        title: 'Nueva puja en tu subasta',
+        message: `Un usuario ofertó $${amount} en tu subasta #${auction_id}`,
+        metadata: { auctionId: auction_id, amount, bidderId: user_id },
+      });
+    }
+
     res.status(201).json({ success: true, data: bid });
   } catch (err) {
     await client.query('ROLLBACK');
@@ -163,6 +199,26 @@ const updateBidStatus = async (req, res, next) => {
     });
 
     await client.query('COMMIT');
+
+    // Notificar cambio de estado
+    if (status === 'accepted') {
+      sendNotification({
+        userId: bid.user_id,
+        type: 'BID_ACCEPTED',
+        title: 'Tu puja fue aceptada',
+        message: `Tu puja de $${bid.amount} fue aceptada en la subasta #${bid.auction_id}`,
+        metadata: { auctionId: bid.auction_id, bidId: bid.id, amount: bid.amount },
+      });
+    } else if (status === 'rejected') {
+      sendNotification({
+        userId: bid.user_id,
+        type: 'BID_REJECTED',
+        title: 'Tu puja fue rechazada',
+        message: `Tu puja de $${bid.amount} fue rechazada en la subasta #${bid.auction_id}`,
+        metadata: { auctionId: bid.auction_id, bidId: bid.id, amount: bid.amount },
+      });
+    }
+
     res.json({ success: true, data: rows[0] });
   } catch (err) {
     await client.query('ROLLBACK');

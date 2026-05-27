@@ -2,12 +2,13 @@ import {
   Controller,
   All,
   Req,
+  Res,
   UseGuards,
   HttpCode,
   Post,
   Body,
 } from '@nestjs/common';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { Public } from '../../common/decorators/public.decorator';
 
@@ -27,26 +28,26 @@ export class AuthController {
 
   @Public()
   @Post('register')
-  register(@Req() request: Request) {
-    return this.authService.forward(request, '/auth/register');
+  register(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
+    return this.authService.forward(request, '/auth/register', response);
   }
 
   @Public()
   @Post('login')
-  login(@Req() request: Request) {
-    return this.authService.forward(request, '/auth/login');
+  login(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
+    return this.authService.forward(request, '/auth/login', response);
   }
 
   @Public()
   @Post('refresh')
-  refresh(@Req() request: Request) {
-    return this.authService.forward(request, '/auth/refresh');
+  refresh(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
+    return this.authService.forward(request, '/auth/refresh', response);
   }
 
   @Public()
   @Post('logout')
-  logout(@Req() request: Request) {
-    return this.authService.forward(request, '/auth/logout');
+  logout(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
+    return this.authService.forward(request, '/auth/logout', response);
   }
 
   /**

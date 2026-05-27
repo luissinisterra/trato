@@ -27,4 +27,7 @@ export const servicesConfig = () => ({
   report: {
     url: process.env.REPORT_SERVICE_URL || 'http://localhost:3007',
   },
+  notification: {
+    url: process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:3008',
+  },
 });

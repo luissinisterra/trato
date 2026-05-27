@@ -1,11 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { NotificationBellComponent } from '../notification-bell/notification-bell.component';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, NotificationBellComponent],
   template: `
     <header class="glass sticky top-0 z-40 h-16 flex items-center px-4 md:px-8 border-b border-border transition-colors">
       <div class="flex-1 flex items-center gap-8">
@@ -31,6 +32,7 @@ import { AuthService } from '../../../core/services/auth.service';
       @if (authService.isLoggedIn()) {
         <div class="flex items-center gap-4">
           <a routerLink="/products/create" class="text-sm font-medium bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg transition-all shadow-glow hidden md:block">Crear Producto</a>
+          <app-notification-bell />
           <span class="text-sm text-text-secondary hidden md:block">{{ authService.currentUser()?.email }}</span>
           <button (click)="logout()" class="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">Cerrar sesión</button>
         </div>

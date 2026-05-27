@@ -4,13 +4,12 @@ import com.trato.auction.auction.entity.Auction;
 import com.trato.auction.auction.dto.CreateAuctionDTO;
 import com.trato.auction.auction.dto.UpdateAuctionDTO;
 import com.trato.auction.auction.repository.AuctionRepository;
+import com.trato.auction.notification.NotificationClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -18,7 +17,8 @@ public class AuctionService {
     @Autowired
     private AuctionRepository auctionRepository;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    @Autowired
+    private NotificationClient notificationClient;
 
     public List<Auction> getAllAuctions() {
         return auctionRepository.findAll();
@@ -37,7 +37,17 @@ public class AuctionService {
         auction.setMinIncrement(req.getMinIncrement());
         auction.setStartTime(req.getStartTime());
         auction.setEndTime(req.getEndTime());
-        return auctionRepository.save(auction);
+        Auction saved = auctionRepository.save(auction);
+
+        notificationClient.sendNotification(
+                "AUCTION_CREATED",
+                String.valueOf(saved.getSellerId()),
+                "Subasta creada exitosamente",
+                "Tu subasta #" + saved.getId() + " ha sido creada correctamente.",
+                Map.of("auctionId", saved.getId(), "productId", saved.getProductId())
+        );
+
+        return saved;
     }
 
     public Optional<Auction> updateAuction(Long id, UpdateAuctionDTO req) {

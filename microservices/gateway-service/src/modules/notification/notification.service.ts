@@ -1,21 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Request, Response } from 'express';
+import { Request } from 'express';
 import { ProxyService } from '../../common/proxy/proxy.service';
 
 @Injectable()
-export class AuthService {
+export class NotificationService {
   private readonly baseUrl: string;
 
   constructor(
     private readonly proxyService: ProxyService,
     private readonly configService: ConfigService,
   ) {
-    this.baseUrl = this.configService.get<string>('AUTH_SERVICE_URL') || 'http://localhost:3001';
+    this.baseUrl = this.configService.get<string>('NOTIFICATION_SERVICE_URL');
   }
 
-  forward(request: Request, path: string, response?: Response): Promise<any> {
+  forward(request: Request, path: string): Promise<any> {
     const targetUrl = `${this.baseUrl}${path}`;
-    return this.proxyService.forward(request, targetUrl, response);
+    return this.proxyService.forward(request, targetUrl);
   }
 }
