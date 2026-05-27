@@ -9,12 +9,19 @@ async function bootstrap() {
   app.use(cookieParser());
 
   const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:4200';
-  const allowedOrigins = corsOrigin.split(',').map((origin) => origin.trim()).filter(Boolean);
+  const rawOrigins = corsOrigin.split(',').map((o) => o.trim()).filter(Boolean);
+
+  // Separa exactos de wildcards (*.dominio.com → regex que matchea cualquier subdominio)
+  const exactOrigins = rawOrigins.filter((o) => !o.startsWith('*.'));
+  const wildcardPatterns = rawOrigins
+    .filter((o) => o.startsWith('*.'))
+    .map((o) => new RegExp('^https?://' + o.slice(2).replace(/\./g, '\\.') + '$'));
+
   app.enableCors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
+      if (!origin) return callback(null, true); // mismo origen / curl
+      if (exactOrigins.includes(origin)) return callback(null, true);
+      if (wildcardPatterns.some((re) => re.test(origin))) return callback(null, true);
       return callback(new Error(`CORS blocked: ${origin}`), false);
     },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
