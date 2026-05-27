@@ -3,10 +3,6 @@
 -- ============================================
 
 -- Status lifecycle: draft → scheduled → active → closed / cancelled
-CREATE TYPE auction_status AS ENUM ('draft', 'scheduled', 'active', 'closed', 'cancelled');
-
--- Audit event types
-CREATE TYPE auction_event_type AS ENUM ('created', 'published', 'started', 'bid_placed', 'closed', 'cancelled');
 
 -- ── Main auctions table ────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS auctions (
@@ -16,7 +12,7 @@ CREATE TABLE IF NOT EXISTS auctions (
   start_price    NUMERIC(12,2)     NOT NULL CHECK (start_price > 0),
   current_price  NUMERIC(12,2)     NOT NULL,
   min_increment  NUMERIC(12,2)     NOT NULL CHECK (min_increment > 0),
-  status         auction_status    NOT NULL DEFAULT 'draft',
+  status         VARCHAR(50)       NOT NULL DEFAULT 'draft',
   start_time     TIMESTAMPTZ       NOT NULL,
   end_time       TIMESTAMPTZ       NOT NULL,
   created_at     TIMESTAMPTZ       NOT NULL DEFAULT NOW(),
@@ -32,7 +28,7 @@ CREATE INDEX idx_auctions_product_id ON auctions(product_id);
 CREATE TABLE IF NOT EXISTS auction_events (
   id          BIGSERIAL             NOT NULL PRIMARY KEY,
   auction_id  BIGINT                NOT NULL REFERENCES auctions(id) ON DELETE CASCADE,
-  event_type  auction_event_type    NOT NULL,
+  event_type  VARCHAR(50)           NOT NULL,
   description TEXT,
   metadata    JSONB,
   created_at  TIMESTAMPTZ           NOT NULL DEFAULT NOW(),
