@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
+import * as https from 'https';
 
 import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
@@ -24,6 +25,7 @@ import { AgentModule } from './modules/agent/agent.module';
     HttpModule.register({
       timeout: 10000,
       maxRedirects: 3,
+      httpsAgent: new https.Agent({ rejectUnauthorized: false }),
     }),
 
     // Módulos de cada microservicio
