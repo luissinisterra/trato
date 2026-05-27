@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  gatewayUrl: 'http://localhost:3000',
+  apiUrl: '/api' // To be configured for prod
 };
