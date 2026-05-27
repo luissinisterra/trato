@@ -1,28 +1,16 @@
 import { Injectable, HttpException, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { firstValueFrom, Observable } from 'rxjs';
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
 
-/**
- * ProxyService
- *
- * Servicio reutilizable para reenviar requests HTTP al microservicio destino.
- * Preserva:
- *  - Método HTTP (GET, POST, PUT, PATCH, DELETE)
- *  - Body
- *  - Query params
- *  - Headers (incluido Authorization Bearer)
- *
- * Maneja errores del downstream y los propaga con el mismo código HTTP.
- */
 @Injectable()
 export class ProxyService {
   private readonly logger = new Logger(ProxyService.name);
 
   constructor(private readonly httpService: HttpService) {}
 
-  async forward(request: Request, targetUrl: string): Promise<any> {
+  async forward(request: Request, targetUrl: string, response?: Response): Promise<any> {
     const method = request.method.toLowerCase();
     const queryString = this.buildQueryString(request.query);
     const url = queryString ? `${targetUrl}${queryString}` : targetUrl;
@@ -43,7 +31,17 @@ export class ProxyService {
         response$ = this.httpService[method](url, config);
       }
 
-      const { data } = await firstValueFrom(response$);
+      const { data, headers: responseHeaders } = await firstValueFrom(response$);
+
+      if (response && responseHeaders['set-cookie']) {
+        const cookies = responseHeaders['set-cookie'];
+        if (Array.isArray(cookies)) {
+          cookies.forEach((cookie) => response.setHeader('Set-Cookie', cookie));
+        } else {
+          response.setHeader('Set-Cookie', [cookies]);
+        }
+      }
+
       return data;
     } catch (error) {
       const status = error?.response?.status || 502;

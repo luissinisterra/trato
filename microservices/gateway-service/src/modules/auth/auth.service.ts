@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { ProxyService } from '../../common/proxy/proxy.service';
 
 @Injectable()
@@ -14,8 +14,8 @@ export class AuthService {
     this.baseUrl = this.configService.get<string>('AUTH_SERVICE_URL') || 'http://localhost:3001';
   }
 
-  forward(request: Request, path: string): Promise<any> {
+  forward(request: Request, path: string, response?: Response): Promise<any> {
     const targetUrl = `${this.baseUrl}${path}`;
-    return this.proxyService.forward(request, targetUrl);
+    return this.proxyService.forward(request, targetUrl, response);
   }
 }
