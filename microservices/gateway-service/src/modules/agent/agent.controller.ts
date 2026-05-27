@@ -19,7 +19,15 @@ export class AgentController {
   }
 
   private forward(request: Request) {
-    const path = request.path.replace(/^\/api/, '');
+    let path = request.path;
+    if (path.startsWith('/api/agents')) {
+      path = path.replace(/^\/api\/agents/, '');
+    } else if (path.startsWith('/agents')) {
+      path = path.replace(/^\/agents/, '');
+    }
+    if (!path) {
+      path = '/chat';
+    }
     const userId = (request as any).user?.id || (request as any).user?.sub;
     if (userId) {
       (request as any).headers['x-user-id'] = String(userId);

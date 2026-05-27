@@ -9,8 +9,14 @@ async function bootstrap() {
   app.use(cookieParser());
 
   const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:4200';
+  const allowedOrigins = corsOrigin.split(',').map((origin) => origin.trim()).filter(Boolean);
   app.enableCors({
-    origin: corsOrigin,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS blocked: ${origin}`), false);
+    },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
     credentials: true,
