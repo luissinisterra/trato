@@ -19,7 +19,7 @@ async function bootstrap() {
 
   app.enableCors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true); // mismo origen / curl
+      if (!origin) return callback(null, true);
       if (exactOrigins.includes(origin)) return callback(null, true);
       if (wildcardPatterns.some((re) => re.test(origin))) return callback(null, true);
       return callback(new Error(`CORS blocked: ${origin}`), false);
