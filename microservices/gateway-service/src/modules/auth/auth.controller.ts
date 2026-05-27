@@ -3,10 +3,9 @@ import {
   All,
   Req,
   Res,
-  UseGuards,
   HttpCode,
   Post,
-  Body,
+  Options,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
@@ -25,6 +24,15 @@ import { Public } from '../../common/decorators/public.decorator';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  // Intercepta preflight OPTIONS antes que el @All() catch-all
+  @Public()
+  @Options()
+  @Options('*')
+  @HttpCode(204)
+  preflight(@Res() res: Response) {
+    res.end();
+  }
 
   @Public()
   @Post('register')
