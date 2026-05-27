@@ -10,6 +10,7 @@ import { BidModule } from './modules/bid/bid.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { ReportModule } from './modules/report/report.module';
 import { NotificationModule } from './modules/notification/notification.module';
+import { AgentModule } from './modules/agent/agent.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { NotificationModule } from './modules/notification/notification.module';
     PaymentModule,
     ReportModule,
     NotificationModule,
+    AgentModule,
   ],
 })
 export class AppModule {}

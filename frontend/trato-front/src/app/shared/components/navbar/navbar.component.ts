@@ -26,6 +26,7 @@ import { NotificationBellComponent } from '../notification-bell/notification-bel
         <nav class="hidden md:flex items-center gap-6 text-sm font-medium">
           <a routerLink="/products" routerLinkActive="text-primary font-semibold" class="text-text-secondary hover:text-text-primary transition-colors">Productos</a>
           <a routerLink="/auctions" routerLinkActive="text-primary font-semibold" class="text-text-secondary hover:text-text-primary transition-colors">Subastas</a>
+          <a routerLink="/asesor" routerLinkActive="text-primary font-semibold" class="text-text-secondary hover:text-text-primary transition-colors">Asesor</a>
         </nav>
       </div>
 

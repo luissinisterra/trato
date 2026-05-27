@@ -30,4 +30,7 @@ export const servicesConfig = () => ({
   notification: {
     url: process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:3008',
   },
+  aiAgent: {
+    url: process.env.AI_AGENT_SERVICE_URL || 'http://localhost:3009',
+  },
 });
