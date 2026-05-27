@@ -48,6 +48,11 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'asesor',
+    loadComponent: () => import('./features/agent/agent-chat/agent-chat.component').then(m => m.AgentChatComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: '**',
     redirectTo: ''
   }

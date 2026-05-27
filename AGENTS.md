@@ -17,6 +17,7 @@
 | product-service | 3004 | Go + Gin + pg | 5436 |
 | bid-service | 3005 | Express + pg | 5433 |
 | notification-service | 3008 | Express + Mongoose (MongoDB) | 27017 |
+| ai-agent-service | 3009 | Python + FastAPI + Mirascope + PG | 5437 |
 | payment-service | 3006 | (not implemented) | — |
 | report-service | 3007 | (not implemented) | — |
 
@@ -31,8 +32,9 @@
 - **Auctions** (Spring Boot): `cd microservices/auctions-service && ./mvnw spring-boot:run`
 - **Product** (Go): `cd microservices/product-service && go run ./cmd/main.go`
 - **Notification** (Express + Mongoose): `cd microservices/notification-service && npm run dev`
+- **AI Agent** (Python): `cd agent/ai-auction-advisor && source .venv/bin/activate && uvicorn src.app:app --port 3009`
 - **Frontend** (Angular): `cd frontend/trato-front && npm start` (port 4200)
-- **Full orchestration**: `docker compose up --build` inside `microservices/gateway-service/` (starts gateway, auth, auctions, bid, notification + their DBs). User and product services are NOT in this compose file — start separately.
+- **Full orchestration**: `docker compose up --build` inside `microservices/gateway-service/` (starts gateway, auth, auctions, bid, notification + ai-agent + their DBs). User and product services are NOT in this compose file — start separately.
 - **Testing**: NestJS services: `npm test` (jest). Angular frontend: `ng test` (vitest).
 
 ## Important gotchas
@@ -50,6 +52,19 @@
 - **Notification-service** usa MongoDB con Mongoose. En primer arranque los índices se crean automáticamente.
 - **Env vars para microservicios**: `WORKER_URL` apunta al Worker de Cloudflare, `NOTIFY_SECRET` es el secreto compartido.
 - **Gateway** apunta al Express notification-service (`NOTIFICATION_SERVICE_URL`), no al Worker. El frontend siempre consulta vía gateway.
+
+## AI Agent (ai-agent-service)
+- **Location**: `agent/ai-auction-advisor/` (nota: fuera de `microservices/`)
+- **Stack**: Python 3.12+ · FastAPI · Mirascope 2.x (Google Gemini) · PostgreSQL · asyncpg
+- **Endpoint**: `POST /api/agents/chat` via gateway → FastAPI `POST /chat` en puerto 3009
+- **Autenticación**: Gateway inyecta `x-user-id` header desde el JWT del usuario
+- **Herramientas del agente**: 11 tools MCP que consultan los servicios de TRATO (subastas, pujas, productos, usuarios) a través del gateway
+- **Historial**: Persistente en PostgreSQL por sesión (session_id). Cada conversación guarda mensajes user/assistant.
+- **LLM**: Google Gemini 2.0 Flash (configurable via `GEMINI_MODEL` en `.env`)
+- **Para correr local**: `cd agent/ai-auction-advisor && source .venv/bin/activate && uvicorn src.app:app --port 3009`
+- **Para correr con Docker**: `docker compose up` dentro de `agent/ai-auction-advisor/` (incluye PostgreSQL)
+- **API Key**: Necesitas `GOOGLE_API_KEY` en `.env`. La free tier de Gemini tiene cuota limitada (60 req/min).
+- **Gateway**: Ruta `/api/agents/*` → `AI_AGENT_SERVICE_URL=http://localhost:3009`
 
 ## DB schemas
 Reference schemas for all services (including unimplemented ones) are in `doc/trato_microservices_db/`.
