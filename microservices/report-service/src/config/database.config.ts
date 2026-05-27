@@ -10,6 +10,12 @@ export class DatabaseConfig implements TypeOrmOptionsFactory {
   constructor(private readonly configService: ConfigService) {}
 
   createTypeOrmOptions(): TypeOrmModuleOptions {
+    const sslEnabled =
+      (this.configService.get<string>('DB_SSL') || '').toLowerCase() === 'true';
+    const sslRejectUnauthorized =
+      (this.configService.get<string>('DB_SSL_REJECT_UNAUTHORIZED') || 'false').toLowerCase() ===
+      'true';
+
     return {
       type: 'postgres',
       host: this.configService.get<string>('DB_HOST', 'localhost'),
@@ -18,6 +24,7 @@ export class DatabaseConfig implements TypeOrmOptionsFactory {
       password: this.configService.get<string>('DB_PASSWORD', 'postgres'),
       database: this.configService.get<string>('DB_NAME', 'report_db'),
       entities: [ReportEntity, ReportRequestEntity],
+      ssl: sslEnabled ? { rejectUnauthorized: sslRejectUnauthorized } : undefined,
       synchronize: false,
       logging: process.env.NODE_ENV === 'development',
     };

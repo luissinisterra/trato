@@ -1,12 +1,17 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
+const sslEnabled = String(process.env.DB_SSL || '').toLowerCase() === 'true';
+const sslRejectUnauthorized =
+  String(process.env.DB_SSL_REJECT_UNAUTHORIZED || 'false').toLowerCase() === 'true';
+
 const pool = new Pool({
   host: process.env.DB_HOST || 'localhost',
   port: process.env.DB_PORT || 5436,
   user: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_NAME || 'payment_db',
+  ssl: sslEnabled ? { rejectUnauthorized: sslRejectUnauthorized } : undefined,
 });
 
 pool.on('error', (err) => {

@@ -16,6 +16,7 @@ func ConnectDB() *sql.DB {
 	user := os.Getenv("DB_USER")
 	password := os.Getenv("DB_PASSWORD")
 	dbname := os.Getenv("DB_NAME")
+	sslmode := os.Getenv("DB_SSL_MODE")
 
 	// Set defaults if not provided (useful for local running outside docker)
 	if host == "" {
@@ -33,9 +34,12 @@ func ConnectDB() *sql.DB {
 	if dbname == "" {
 		dbname = "product_service_db"
 	}
+	if sslmode == "" {
+		sslmode = "disable"
+	}
 
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		host, port, user, password, dbname, sslmode)
 
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
