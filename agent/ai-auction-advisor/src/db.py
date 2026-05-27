@@ -5,10 +5,28 @@ from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
+from urllib.parse import parse_qs, urlencode
 from src.config import settings
 
+# Sanitize the database URL for asyncpg compatibility
+db_url = settings.database_url
+if db_url.startswith("postgresql://"):
+    db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+elif db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql+asyncpg://", 1)
 
-engine = create_async_engine(settings.database_url, echo=False)
+# Remove parameters that asyncpg doesn't support (like sslmode and channel_binding)
+if "?" in db_url:
+    base_url, query_str = db_url.split("?", 1)
+    query_params = parse_qs(query_str)
+    query_params.pop("sslmode", None)
+    query_params.pop("channel_binding", None)
+    if query_params:
+        db_url = f"{base_url}?{urlencode(query_params, doseq=True)}"
+    else:
+        db_url = base_url
+
+engine = create_async_engine(db_url, echo=False)
 AsyncSessionLocal = async_sessionmaker(engine)
 
 
