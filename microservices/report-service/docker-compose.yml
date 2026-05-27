@@ -1,0 +1,42 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: report-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: report_db
+    ports:
+      - "5437:5432"
+    volumes:
+      - report-db-volume:/var/lib/postgresql/data
+      - ./migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - report-network
+
+  app:
+    build: .
+    container_name: report-service
+    ports:
+      - "3007:3007"
+    environment:
+      NODE_ENV: production
+      PORT: 3007
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: report_db
+      AUCTIONS_SERVICE_URL: http://host.docker.internal:3003
+      BID_SERVICE_URL: http://host.docker.internal:3005
+      USER_SERVICE_URL: http://host.docker.internal:3002
+    depends_on:
+      - postgres
+    networks:
+      - report-network
+
+volumes:
+  report-db-volume:
+
+networks:
+  report-network:
