@@ -16,7 +16,7 @@ public class AuctionEvent {
     private Auction auction;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "event_type", nullable = false, columnDefinition = "auction_event_type")
+    @Column(name = "event_type", nullable = false)
     private AuctionEventType eventType;
 
     @Column(columnDefinition = "TEXT")

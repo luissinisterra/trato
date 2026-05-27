@@ -9,7 +9,7 @@ public class AuctionStatusConverter implements AttributeConverter<AuctionStatus,
     @Override
     public String convertToDatabaseColumn(AuctionStatus status) {
         if (status == null) return null;
-        return status.name().toLowerCase() + "::auction_status";
+        return status.name().toLowerCase();
     }
 
     @Override
