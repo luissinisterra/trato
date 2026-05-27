@@ -15,9 +15,17 @@ export class BidController {
   constructor(private readonly bidService: BidService) {}
 
   @All()
-  @All('*path')
-  forward(@Req() request: Request) {
-    const path = request.path;
+  forwardRoot(@Req() request: Request) {
+    return this.forward(request);
+  }
+
+  @All('*')
+  forwardAll(@Req() request: Request) {
+    return this.forward(request);
+  }
+
+  private forward(request: Request) {
+    const path = request.path.replace(/^\/api/, '');
     return this.bidService.forward(request, path);
   }
 }
