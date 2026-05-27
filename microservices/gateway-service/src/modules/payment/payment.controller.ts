@@ -15,9 +15,17 @@ export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
   @All()
-  @All('*path')
-  forward(@Req() request: Request) {
-    const path = request.path;
+  forwardRoot(@Req() request: Request) {
+    return this.forward(request);
+  }
+
+  @All('*')
+  forwardAll(@Req() request: Request) {
+    return this.forward(request);
+  }
+
+  private forward(request: Request) {
+    const path = request.path.replace(/^\/api/, '');
     return this.paymentService.forward(request, path);
   }
 }

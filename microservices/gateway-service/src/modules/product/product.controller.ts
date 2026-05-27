@@ -15,9 +15,17 @@ export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
   @All()
-  @All('*path')
-  forward(@Req() request: Request) {
-    const path = request.path.replace(/^\/products/, '');
+  forwardRoot(@Req() request: Request) {
+    return this.forward(request);
+  }
+
+  @All('*')
+  forwardAll(@Req() request: Request) {
+    return this.forward(request);
+  }
+
+  private forward(request: Request) {
+    const path = request.path.replace(/^\/api\/products/, '');
     return this.productService.forward(request, `/products${path}`);
   }
 }
