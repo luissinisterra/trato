@@ -175,12 +175,12 @@ export class ReportService {
       const averageSaleValue = totalSales ? totalAmount / totalSales : 0;
       const topAuctions = Object.entries(
         completedPayments.reduce((acc, payment) => {
-          const auctionId = payment.auction_id ?? payment.auctionId ?? 'unknown';
+          const auctionId = String(payment.auction_id ?? payment.auctionId ?? 'unknown');
           acc[auctionId] = (acc[auctionId] || 0) + Number(payment.amount ?? 0);
           return acc;
         }, {} as Record<string, number>),
       )
-        .sort(([, a], [, b]) => b - a)
+        .sort(([, a]: [string, number], [, b]: [string, number]) => b - a)
         .slice(0, 3)
         .map(([auctionId]) => auctionId);
 
