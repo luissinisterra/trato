@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuctionService } from '../services/auction.service';
 import { BidService } from '../services/bid.service';
+import { PaymentService } from '../../payments/services/payment.service';
 import { ProductService } from '../../products/services/product.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -128,6 +129,17 @@ import { forkJoin, interval, Subscription } from 'rxjs';
                     Hacer Oferta
                   </button>
                   <p class="text-center text-xs text-text-muted mt-3">Oferta mínima siguiente: <span class="font-bold text-text-secondary">{{ a.currentPrice + a.minIncrement | currency }}</span></p>
+                } @else if (canPay()) {
+                  <button (click)="payAuction()"
+                          [disabled]="isPaying()"
+                          class="w-full h-14 rounded-xl text-lg font-bold text-white bg-emerald-600 hover:bg-emerald-500 transition-all shadow-glow flex items-center justify-center gap-3 disabled:opacity-50">
+                    @if (isPaying()) {
+                      Pagando...
+                    } @else {
+                      Pagar subasta
+                    }
+                  </button>
+                  <p class="text-center text-xs text-text-muted mt-3">Paga el precio final de la subasta para cerrar la transacción.</p>
                 } @else {
                   <div class="w-full h-14 rounded-xl flex items-center justify-center font-bold border-2"
                        [ngClass]="{'bg-bg-hover text-text-muted border-border': a.status === 'CLOSED', 'bg-warning/10 text-warning border-warning/20': a.status === 'SCHEDULED'}">
@@ -290,6 +302,7 @@ export class AuctionDetailComponent implements OnInit, OnDestroy {
   private auctionService = inject(AuctionService);
   private productService = inject(ProductService);
   private bidService = inject(BidService);
+  private paymentService = inject(PaymentService);
   private authService = inject(AuthService);
   private toastService = inject(ToastService);
 
@@ -300,6 +313,7 @@ export class AuctionDetailComponent implements OnInit, OnDestroy {
   isLoading = signal<boolean>(true);
   isBidModalOpen = signal<boolean>(false);
   isSubmittingBid = signal<boolean>(false);
+  isPaying = signal<boolean>(false);
   isDeleteConfirmOpen = signal<boolean>(false);
   isDeleting = signal<boolean>(false);
 
@@ -307,6 +321,12 @@ export class AuctionDetailComponent implements OnInit, OnDestroy {
     const a = this.auction();
     const user = this.authService.currentUser();
     return a !== null && user !== null && a.sellerId === user.id;
+  });
+
+  canPay = computed(() => {
+    const a = this.auction();
+    const user = this.authService.currentUser();
+    return a !== null && user !== null && a.status === 'CLOSED' && a.sellerId !== user.id;
   });
   
   timeRemaining = signal<number>(0);
@@ -417,6 +437,42 @@ export class AuctionDetailComponent implements OnInit, OnDestroy {
     this.isDeleteConfirmOpen.set(false);
   }
 
+  payAuction() {
+    if (!this.authService.isLoggedIn()) {
+      this.toastService.warning('Debes iniciar sesión para pagar la subasta');
+      return;
+    }
+
+    const currAuction = this.auction();
+    const currUser = this.authService.currentUser();
+
+    if (!currAuction || !currUser) return;
+
+    this.isPaying.set(true);
+    this.paymentService.createPayment({
+      auction_id: currAuction.id,
+      user_id: currUser.id,
+      amount: currAuction.currentPrice,
+      payment_method: 'credit_card'
+    }).subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.toastService.success('Pago creado con éxito');
+          this.router.navigate(['/payments']);
+        } else {
+          this.toastService.error(res.message || 'No se pudo crear el pago');
+        }
+      },
+      error: (err) => {
+        const message = err.error?.message || 'Error al procesar el pago';
+        this.toastService.error(message);
+      },
+      complete: () => {
+        this.isPaying.set(false);
+      }
+    });
+  }
+
   confirmDeleteAuction() {
     const a = this.auction();
     if (!a || this.isDeleting()) return;
@@ -464,7 +520,7 @@ export class AuctionDetailComponent implements OnInit, OnDestroy {
 
       this.isSubmittingBid.set(true);
       
-      this.bidService.placeBid(currAuction.id, currUser.id, amount).subscribe({
+      this.bidService.placeBid(currAuction.id, currUser.id, amount, currAuction.sellerId).subscribe({
         next: (res) => {
           this.toastService.success('¡Oferta realizada con éxito!');
           this.closeBidModal();

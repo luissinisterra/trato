@@ -11,7 +11,9 @@ export class ReportService {
     private readonly proxyService: ProxyService,
     private readonly configService: ConfigService,
   ) {
-    this.baseUrl = this.configService.get<string>('REPORT_SERVICE_URL');
+    this.baseUrl =
+      this.configService.get<string>('REPORT_SERVICE_URL') ||
+      'http://localhost:3007';
   }
 
   forward(request: Request, path: string): Promise<any> {

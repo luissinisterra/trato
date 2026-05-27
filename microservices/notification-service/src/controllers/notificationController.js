@@ -1,7 +1,6 @@
 const Notification = require('../models/Notification');
-const { connectDB } = require('../config/database');
-
-connectDB();
+const { publishNotificationEvent } = require('../services/rabbitmqService');
+const { createNotificationFromEvent } = require('../services/notificationProcessor');
 
 const createNotification = async (req, res, next) => {
   try {
@@ -143,16 +142,24 @@ const createEvent = async (req, res, next) => {
   try {
     const { eventType, userId, title, message, metadata, auctionId, amount } = req.body;
     const type = eventType || req.body.type;
+    const eventPayload = {
+      eventType: type,
+      userId,
+      title,
+      message,
+      metadata,
+      auctionId,
+      amount,
+    };
 
-    const notification = await Notification.create({
-      user_id: userId ?? null,
-      type,
-      title: title || buildTitle(req.body),
-      message: message || buildMessage(req.body),
-      metadata: { ...(metadata || {}), ...(auctionId ? { auctionId } : {}), ...(amount != null ? { amount } : {}) },
-    });
-
-    res.status(201).json({ success: true, data: notification });
+    try {
+      await publishNotificationEvent(eventPayload);
+      return res.status(202).json({ success: true, data: eventPayload, message: 'Notification event queued' });
+    } catch (publishErr) {
+      console.warn('RabbitMQ unavailable, saving notification directly:', publishErr.message);
+      const fallbackNotification = await createNotificationFromEvent(eventPayload);
+      return res.status(201).json({ success: true, data: fallbackNotification, fallback: true });
+    }
   } catch (err) {
     next(err);
   }

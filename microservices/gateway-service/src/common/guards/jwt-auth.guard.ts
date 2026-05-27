@@ -39,7 +39,9 @@ export class JwtAuthGuard implements CanActivate {
       throw new UnauthorizedException('Token no proporcionado');
     }
 
-    const authServiceUrl = this.configService.get<string>('AUTH_SERVICE_URL');
+    const authServiceUrl =
+      this.configService.get<string>('AUTH_SERVICE_URL') ||
+      'http://localhost:3001';
     const validateUrl = `${authServiceUrl}/auth/validate`;
 
     try {

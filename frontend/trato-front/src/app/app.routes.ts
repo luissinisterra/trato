@@ -43,6 +43,16 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'payments',
+    loadComponent: () => import('./features/payments/payment-page/payment-page.component').then(m => m.PaymentPageComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'reports',
+    loadComponent: () => import('./features/reports/report-page/report-page.component').then(m => m.ReportPageComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: 'notifications',
     loadComponent: () => import('./features/notifications/notifications-page/notifications-page.component').then(m => m.NotificationsPageComponent),
     canActivate: [authGuard]
