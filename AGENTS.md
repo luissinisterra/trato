@@ -2,7 +2,8 @@
 
 ## Architecture Overview
 - **Entry point**: `microservices/gateway-service` on port 3000 (NestJS). All client requests go through here.
-- Gateway forwards by path: `/auth/*` → 3001, `/users/*` → 3002, `/auctions/*` → 3003, `/products/*` → 3004, `/bids/*` → 3005, `/payments/*` → 3006, `/reports/*` → 3007.
+- Gateway forwards by path: `/auth/*` → 3001, `/users/*` → 3002, `/auctions/*` → 3003, `/products/*` → 3004, `/bids/*` → 3005, `/payments/*` → 3006, `/reports/*` → 3007, `/notifications/*` → 3008.
+- **Notification architecture**: Microservicios → Cloudflare Worker (validate + forward) → Express notification-service → MongoDB. Frontend consulta notificaciones a través del gateway → Express notification-service.
 - Auth routes (`/auth/register`, `/auth/login`, `/auth/refresh`) are public. All other routes require JWT — the gateway validates tokens by calling `POST /auth/validate` on the auth-service (no local JWT decoding).
 - Frontend: Angular 21 + TailwindCSS 4 at `frontend/trato-front/` (port 4200).
 
@@ -15,6 +16,7 @@
 | auctions-service | 3003 | Spring Boot (Java 21) + JPA | 5434 |
 | product-service | 3004 | Go + Gin + pg | 5436 |
 | bid-service | 3005 | Express + pg | 5433 |
+| notification-service | 3008 | Express + Mongoose (MongoDB) | 27017 |
 | payment-service | 3006 | (not implemented) | — |
 | report-service | 3007 | (not implemented) | — |
 
@@ -28,8 +30,9 @@
 - **User/Bid** (Express): `cd microservices/<service> && npm run dev`
 - **Auctions** (Spring Boot): `cd microservices/auctions-service && ./mvnw spring-boot:run`
 - **Product** (Go): `cd microservices/product-service && go run ./cmd/main.go`
+- **Notification** (Express + Mongoose): `cd microservices/notification-service && npm run dev`
 - **Frontend** (Angular): `cd frontend/trato-front && npm start` (port 4200)
-- **Full orchestration**: `docker compose up --build` inside `microservices/gateway-service/` (starts gateway, auth, auctions, bid + their DBs). User and product services are NOT in this compose file — start separately.
+- **Full orchestration**: `docker compose up --build` inside `microservices/gateway-service/` (starts gateway, auth, auctions, bid, notification + their DBs). User and product services are NOT in this compose file — start separately.
 - **Testing**: NestJS services: `npm test` (jest). Angular frontend: `ng test` (vitest).
 
 ## Important gotchas
@@ -42,8 +45,14 @@
 - **Product-service** uses Go 1.26+ with Gin. Run `go run ./cmd/main.go` (not a build tool wrapping it).
 - **Auth-service** has a `test/` dir with e2e tests (`npm run test:e2e`). The health controller has a `.spec.ts` file.
 
+- **Notification architecture**: Microservicios → Cloudflare Worker → Express notification-service → MongoDB. Frontend consulta a través del gateway → Express notification-service.
+- **Cloudflare Worker** (`worker.js`) recibe eventos de los microservicios en `POST /notify` con header `x-notify-secret`, valida payload y reenvía al Express notification-service con `x-api-key`.
+- **Notification-service** usa MongoDB con Mongoose. En primer arranque los índices se crean automáticamente.
+- **Env vars para microservicios**: `WORKER_URL` apunta al Worker de Cloudflare, `NOTIFY_SECRET` es el secreto compartido.
+- **Gateway** apunta al Express notification-service (`NOTIFICATION_SERVICE_URL`), no al Worker. El frontend siempre consulta vía gateway.
+
 ## DB schemas
-Reference SQL schemas for all services (including unimplemented ones) are in `doc/trato_microservices_db/`.
+Reference schemas for all services (including unimplemented ones) are in `doc/trato_microservices_db/`.
 
 ## API conventions
 - Express services return `{ success: true/false, data: ... }` and validation errors as `{ success: false, errors: [...] }`.
