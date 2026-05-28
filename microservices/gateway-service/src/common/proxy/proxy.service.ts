@@ -18,7 +18,6 @@ export class ProxyService {
     const url = queryString ? `${targetUrl}${queryString}` : targetUrl;
 
     const headers = this.buildHeaders(request);
-    headers['Host'] = `localhost:${new URL(targetUrl).port}`;
 
     const config: AxiosRequestConfig = { headers, httpsAgent: this.agent };
 
