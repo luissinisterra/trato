@@ -3,10 +3,12 @@ import { HttpService } from '@nestjs/axios';
 import { Request, Response } from 'express';
 import { firstValueFrom, Observable } from 'rxjs';
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
+import * as https from 'https';
 
 @Injectable()
 export class ProxyService {
   private readonly logger = new Logger(ProxyService.name);
+  private readonly agent = new https.Agent({ rejectUnauthorized: false });
 
   constructor(private readonly httpService: HttpService) {}
 
@@ -18,7 +20,7 @@ export class ProxyService {
     const headers = this.buildHeaders(request);
     headers['Host'] = `localhost:${new URL(targetUrl).port}`;
 
-    const config: AxiosRequestConfig = { headers };
+    const config: AxiosRequestConfig = { headers, httpsAgent: this.agent };
 
     this.logger.debug(`Forwarding ${request.method} → ${url}`);
 
