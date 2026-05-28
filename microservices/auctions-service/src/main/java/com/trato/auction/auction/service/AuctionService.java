@@ -61,6 +61,14 @@ public class AuctionService {
         return Optional.of(auctionRepository.save(auction));
     }
 
+    public Optional<Auction> updateStatus(Long id, com.trato.auction.auction.entity.AuctionStatus status) {
+        Optional<Auction> optional = auctionRepository.findById(id);
+        if (optional.isEmpty()) return Optional.empty();
+        Auction auction = optional.get();
+        auction.setStatus(status);
+        return Optional.of(auctionRepository.save(auction));
+    }
+
     public boolean deleteAuction(Long id) {
         if (!auctionRepository.existsById(id)) return false;
         auctionRepository.deleteById(id);

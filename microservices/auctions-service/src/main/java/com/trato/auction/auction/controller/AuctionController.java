@@ -42,6 +42,13 @@ public class AuctionController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Auction> updateStatus(@PathVariable Long id, @Valid @RequestBody com.trato.auction.auction.dto.UpdateStatusRequest req) {
+        return auctionService.updateStatus(id, req.getStatus())
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<String>> deleteAuction(@PathVariable Long id) {
         boolean deleted = auctionService.deleteAuction(id);
