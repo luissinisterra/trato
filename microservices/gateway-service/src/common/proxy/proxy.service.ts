@@ -73,11 +73,6 @@ export class ProxyService {
       headers['Cookie'] = cookie as string;
     }
 
-    const userAgent = request.headers['user-agent'];
-    if (userAgent) {
-      headers['User-Agent'] = userAgent as string;
-    }
-
     return headers;
   }
 
